@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.medical.dao.RecordMapper">
+    <resultMap id="healthData" type="com.medical.entity.HealthData">
+        <result column="date" jdbcType="DATE" property="date"/>
+        <result column="number" jdbcType="INTEGER" property="number"/>
+    </resultMap>
+
+
+    <resultMap id="need_to_take" type="com.medical.entity.Take_Drug_Record">
+        <result column="id" jdbcType="INTEGER" property="id"/>
+        <result column="uid" jdbcType="VARCHAR" property="uid"/>
+        <result column="dname" jdbcType="VARCHAR" property="dname"/>
+        <result column="ttime" jdbcType="TIMESTAMP" property="take_drug_time"/>
+        <result column="number" jdbcType="INTEGER" property="number"/>
+    </resultMap>
+
+
+    <select id="drugs_need_to_take" resultMap="need_to_take">
+        SELECT id, uid, d.name AS dname, take_drug_time AS ttime, number
+        FROM drug AS d, user_drug
+        WHERE d.did=user_drug.did
+        AND uid=#{uid}
+    </select>
+
+    <select id="all_drugs" resultType="Integer">
+        SELECT id FROM record
+        WHERE TO_DAYS(date)=TO_DAYS(#{date})
+    </select>
+
+    <select id="check_is_taken" resultType="Integer">
+        SELECT COUNT(*) FROM record
+        WHERE id=#{id} AND date=#{day}
+    </select>
+
+    <select id="heart_rates" resultMap="healthData">
+        SELECT `date`, number
+        FROM heartrate
+        WHERE uid=#{uid}
+        ORDER BY DATE DESC
+    </select>
+
+    <select id="blood_pressures" resultMap="healthData">
+        SELECT `date`, number
+        FROM bloodpresure
+        WHERE uid=#{uid}
+        ORDER BY DATE DESC
+    </select>
+
+    <insert id="setBloodPressure" parameterType="com.medical.entity.HealthData">
+        INSERT IGNORE INTO bloodpressure(uid,date,number)
+        VALUES(#{uid},#{date},#{number})
+    </insert>
+
+    <insert id="setHeartRate" parameterType="com.medical.entity.HealthData">
+        INSERT IGNORE INTO heartrate(uid,date,number)
+        VALUES(#{uid},#{date},#{number})
+    </insert>
+
+    <insert id="add_drug_record">
+        INSERT INTO user_drug(uid,did,take_drug_time,number)
+        VALUES(#{uid},#{did},#{time},#{number})
+    </insert>
+
+    <delete id="delete_drug_record">
+        DELETE FROM user_drug
+        WHERE id=#{id}
+    </delete>
+
+    <insert id="setDrugTaken">
+        INSERT IGNORE INTO record(id,date)
+        VALUES(#{id},NOW())
+    </insert>
+</mapper>
